@@ -1,6 +1,8 @@
 # Python Neural Network Playground (WIP)
 Google's Neural Network Playground in Python
 
+Original: https://playground.tensorflow.org
+
 ## Getting Started
 This project is written in Python 3.6 and based on wxPython GUI.
 
