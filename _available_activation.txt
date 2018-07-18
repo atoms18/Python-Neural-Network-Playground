@@ -1,0 +1,15 @@
+softmax         (0,1)
+elu             (-alpha,inf)
+selu            (-lambda*alpha,inf)
+softplus        (0,inf)
+softsign        (-1,1)
+relu            [0,inf]
+tanh            (-1,1)
+sigmoid         (0,1)
+hard_sigmoid    [0,1]
+linear          (-inf,inf)
+gaussian        (0,1]
+
+LeakyReLU       (-inf,inf)
+PReLU           (-inf,inf)
+ThresholdedReLU
