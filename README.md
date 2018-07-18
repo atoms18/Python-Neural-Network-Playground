@@ -10,3 +10,4 @@ With an Keras DL library I'm highly recommand you to use Tensorflow as backend.
 ```
 python3 main.py
 ```
+Waiting for you all to improve it
