@@ -21,7 +21,6 @@ class MainModel(Model):
     session = backend.get_session()
 
     ml_callback = callback.Callback()
-    current_predict_datas = None
 
     # Static property
     model_stru = copy.deepcopy(DEFAULT_MODEL)
@@ -38,9 +37,6 @@ class MainModel(Model):
         self.choosed_optimizer = "Adam"
 
         canvas_pos4canvas = []
-        # for index in range(outputCanvasDensity ** 2):
-        #     i = index % outputCanvasDensity
-        #     j = int(index / outputCanvasDensity)
         for j in range(outputCanvasDensity):
             for i in range(outputCanvasDensity):
                 x_for_ml = numpy.interp(
@@ -49,8 +45,8 @@ class MainModel(Model):
                     j, [0, outputCanvasDensity - 1],
                     [outputPanelRange[1], outputPanelRange[0]])
                 canvas_pos4canvas.append([x_for_ml, y_for_ml])
-
         self.canvas_pos4canvas = canvas_pos4canvas
+
         canvas_pos4neuron = []
         for j in range(self.app.output_neuron_density):
             for i in range(self.app.output_neuron_density):
@@ -61,10 +57,6 @@ class MainModel(Model):
                     j, [0, self.app.output_neuron_density - 1],
                     [outputPanelRange[1], outputPanelRange[0]])
                 canvas_pos4neuron.append([x_for_ml, y_for_ml])
-
-        self.current_neuron_predict_datas = [0] * len(
-            MainModel.model_stru["hiddens"])
-
         self.canvas_pos4neuron = canvas_pos4neuron
         self.preparePredictDataForCanvas()
 
@@ -233,9 +225,8 @@ class MainModel(Model):
         neruon_pos = self.app.main_frame.neruonPanelMouseHoveredPos
         if(neruon_pos is not None):
             i, j = neruon_pos
-            predict_neroun = numpy.transpose(
-                self.hiddens_layer_model[i].predict_on_batch(
-                    self.predict_data4canvas))
+            predict_neroun = self.hiddens_layer_model[i].predict_on_batch(
+                self.predict_data4canvas).T
             self.current_predict_datas = predict_neroun[j]
         else:
             if(newpredict):
@@ -253,8 +244,7 @@ class MainModel(Model):
         if(newpredict):
             datas = []
             for model in self.hiddens_layer_model:
-                predicts = numpy.transpose(
-                    model.predict_on_batch(self.predict_data4neuron))
+                predicts = model.predict_on_batch(self.predict_data4neuron).T
                 for predict in predicts:
                     datas.append(predict)
             self.current_neuron_predict_datas = datas

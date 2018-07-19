@@ -130,7 +130,25 @@ class Datasets():
         return pos
 
     def plane_regression(x, y, args):
-        c = numpy.interp(x + y, [-10, 10], [-1, 1])
+        c = numpy.interp(x + y, [-6, 6], [-1, 1])
+        x += random.uniform(-6, 6) * args[2]
+        y += random.uniform(-6, 6) * args[2]
+        return [x, y, c]
+
+    def line_regression(x, y, args):
+        line1 = x + y - 4
+        if(line1 > -4):
+            if(line1 > 0):
+                c = numpy.interp(line1, [0, 6], [1, 0])
+            else:
+                c = numpy.interp(line1, [-4, 0], [0, 1])
+
+        line2 = x + y + 4
+        if(line2 < 4):
+            if(line2 > 0):
+                c = numpy.interp(line2, [0, 4], [-1, 0])
+            else:
+                c = numpy.interp(line2, [-6, 0], [0, -1])
         x += random.uniform(-6, 6) * args[2]
         y += random.uniform(-6, 6) * args[2]
         return [x, y, c]

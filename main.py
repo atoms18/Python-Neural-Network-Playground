@@ -64,6 +64,7 @@ DATASETS_LIST = {
     "Exclusive OR": Datasets.xor,
     "Spiral": Datasets.spiral,
     "Plane Regression": Datasets.plane_regression,
+    "Line Regression": Datasets.line_regression,
 }
 
 LEARNING_RATE_LIST = [
