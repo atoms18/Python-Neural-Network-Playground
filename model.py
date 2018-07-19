@@ -9,7 +9,7 @@ from keras.models import Model
 from keras.layers import Dense, Activation, Input
 
 from main import DATASETS_NUM, DEFAULT_MODEL, INPUTS
-from main import TRAIN_DATASETS_FORM, DATASETS_FORM
+from main import TRAIN_DATASETS_FORM, DATASETS_FORM, MODE
 from main import OPTIMIZERS_LIST, DATASETS_LIST, ACTIVATION_FUNC_LIST
 from main import outputPanelSize, outputPanelRange, outputCanvasDensity
 import callback
@@ -81,8 +81,10 @@ class MainModel(Model):
             elif(act_func in ACTIVATION_FUNC_LIST):
                 h = Activation(ACTIVATION_FUNC_LIST[act_func])(h)
 
-        outputs = Dense(1)(h)
-        # outputs = Dense(2)(h)  # (output range: [0 -> 1, 0 -> 1])
+        if(MODE == 0 or MODE == 1):
+            outputs = Dense(1)(h)
+        if(MODE == 2):
+            outputs = Dense(2)(h)  # (output range: [0 -> 1, 0 -> 1])
 
         act_func = MainModel.model_stru["outputs"]["activation"]
         if(callable(act_func)):
@@ -175,15 +177,16 @@ class MainModel(Model):
                     ):
                         continue
 
+                    y_train = color
                     if(isinstance(color, float)):
-                        y_train = color
-                        # if(color > 0):
-                        #     y_train = [color, 0]
-                        # else:
-                        #     y_train = [0, -color]
+                        if(MODE == 2):
+                            if(color > 0):
+                                y_train = [color, 0]
+                            else:
+                                y_train = [0, -color]
                     else:
-                        y_train = color
-                        # y_train = [1, 0] if(color == 1) else [0, 1]  # (output range: [0 -> 1, 0 -> 1])
+                        if(MODE == 2):
+                            y_train = [1, 0] if(color == 1) else [0, 1]  # (output range: [0 -> 1, 0 -> 1])
 
                     datasets_[dataset_suffix].append([[new_x, new_y], y_train])
 
@@ -210,9 +213,11 @@ class MainModel(Model):
                 datasets_["X_" + dataset_key].append(
                     self.getInputsForm([x, y]))
 
-                # y_train = [color]  # (output range: -1 -> 1)
-                y_train = numpy.interp(color, [-1, 1], [0, 1])  # (output range: 0 -> 1)
-                # y_train = color  # (output range: [0 -> 1, 0 -> 1])
+                y_train = color  # (output range: [0 -> 1, 0 -> 1])
+                if(MODE == 0):
+                    y_train = [color]  # (output range: -1 -> 1)
+                if(MODE == 1):
+                    y_train = numpy.interp(color, [-1, 1], [0, 1])  # (output range: 0 -> 1)
                 datasets_["Y_" + dataset_key].append(y_train)
 
         datasets_["X_train"] = numpy.array(datasets_["X_train"])
@@ -238,7 +243,6 @@ class MainModel(Model):
         wx.CallAfter(
             self.app.main_frame.output_panel.updateOutputCanvasImage,
             map_predict_datas_to_rgba)
-        return self.current_predict_datas
 
     def predictToNeuronsCanvas(self, newpredict=True):
         if(newpredict):
@@ -258,7 +262,6 @@ class MainModel(Model):
             wx.CallAfter(
                 panels[panel_index].updateOutputCanvasImage,
                 map_predict_datas_to_rgba[panel_index])
-        return self.current_neuron_predict_datas
 
     # Utils
     def getInputsForm(self, pos):

@@ -16,7 +16,7 @@ TEST_DATASETS_RATIO = 0.2
 
 outputPanelSize = 300
 outputPanelRange = [-6, 6]
-outputCanvasDensity = 150
+outputCanvasDensity = 100
 
 DEFAULT_MODEL = {
     "inputs": ["x", "y"],
@@ -91,6 +91,14 @@ OPTIMIZERS_LIST = {
 
 }
 
+# (output range)
+# 0 is for [-1 -> 1]
+# 1 is for [0 -> 1]
+# 2 is for [0 -> 1, 0 -> 1]
+# But you have to uncomment
+# some code at app.py:mapOutputToRGBA() for this to work
+# because there are lag if I'm not commenting those
+MODE = 1
 DEBUG = False
 DATASETS_FORM = {"train": [], "test": []}
 TRAIN_DATASETS_FORM = {

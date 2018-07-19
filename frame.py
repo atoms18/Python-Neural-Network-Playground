@@ -8,7 +8,7 @@ from keras import backend
 from matplotlib.pyplot import figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
-from main import DEFAULT_WIDTH, DEFAULT_HEIGHT
+from main import DEFAULT_WIDTH, DEFAULT_HEIGHT, MODE
 from main import TRAIN_DATASETS_FORM, DATASETS_FORM, INPUTS, OPTIMIZERS_LIST
 from main import DATASETS_LIST, LEARNING_RATE_LIST, ACTIVATION_FUNC_LIST
 from main import outputPanelSize, outputPanelRange, outputCanvasDensity
@@ -88,7 +88,8 @@ class MainFrame(wx.Frame):
         lr_dropdown.Bind(wx.EVT_CHOICE, self.lrDropdownEvent)
 
         lrSizer.Add(lr_statictext, 0, wx.LEFT | wx.TOP, self.border)
-        lrSizer.Add(lr_dropdown, 0, wx.LEFT | wx.BOTTOM | wx.RIGHT, self.border)
+        lrSizer.Add(
+            lr_dropdown, 0, wx.LEFT | wx.BOTTOM | wx.RIGHT, self.border)
 
         topSizer.Add(reset_button, self.sizerFlags1)
         topSizer.Add(self.action_button, self.sizerFlags1)
@@ -182,21 +183,14 @@ class MainFrame(wx.Frame):
             for unit in range(units):
                 neruonSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-                name = str(i) + "," + str(unit)
-
+                bias_panel_name = str(i) + "," + str(unit)
                 bias_panel = wx.Panel(
-                    scrolled_panel, size=(5, 5), name=name)
-                bias_panel.Bind(
-                    wx.EVT_ENTER_WINDOW, self.biasPanelMouseEnterEvent)
-                bias_panel.Bind(
-                    wx.EVT_LEAVE_WINDOW, self.biasPanelMouseLeaveEvent)
-                bias_panel.Bind(
-                    wx.EVT_LEFT_UP, self.biasPanelLeftReleasedEvent)
+                    scrolled_panel, size=(5, 5), name=bias_panel_name)
                 self.bias_panels.append(bias_panel)
 
                 neruon_panel = output_panel.OutputPanel(
                     scrolled_panel, self,
-                    50, self.app.output_neuron_density, name=name)
+                    50, self.app.output_neuron_density, name=bias_panel_name)
                 neruon_panel.Bind(
                     wx.EVT_ENTER_WINDOW, self.neruonPanelMouseEnterEvent)
                 neruon_panel.Bind(
@@ -338,13 +332,29 @@ class MainFrame(wx.Frame):
         self.output_display_panel.Bind(
             wx.EVT_MOTION, self.displayPanelMotionEvent)
 
-        self.bias_panels.append(wx.Panel(self, size=(5, 5), name="output"))
-        self.bias_panels[-1].Bind(
-            wx.EVT_ENTER_WINDOW, self.biasPanelMouseEnterEvent)
-        self.bias_panels[-1].Bind(
-            wx.EVT_LEAVE_WINDOW, self.biasPanelMouseLeaveEvent)
-        self.bias_panels[-1].Bind(
-            wx.EVT_LEFT_UP, self.biasPanelLeftReleasedEvent)
+        outputBiasPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        output_bias_panel_name = "output," + str(
+            len(model.MainModel.model_stru["hiddens"])) + ",{}"
+        self.bias_panels.append(
+            wx.Panel(self, size=(5, 5), name=output_bias_panel_name.format(0)))
+        outputBiasPanelSizer.Add(
+            self.bias_panels[-1], 0, wx.LEFT | wx.BOTTOM, self.border)
+
+        # (output range: [0 -> 1, 0 -> 1])
+        if(MODE == 2):
+            self.bias_panels.append(wx.Panel(
+                self, size=(5, 5), name=output_bias_panel_name.format(1)))
+            outputBiasPanelSizer.Add(
+                self.bias_panels[-1], 0, wx.LEFT | wx.BOTTOM, self.border)
+
+        for bias_panel in self.bias_panels:
+            bias_panel.Bind(
+                wx.EVT_ENTER_WINDOW, self.biasPanelMouseEnterEvent)
+            bias_panel.Bind(
+                wx.EVT_LEAVE_WINDOW, self.biasPanelMouseLeaveEvent)
+            bias_panel.Bind(
+                wx.EVT_LEFT_UP, self.biasPanelLeftReleasedEvent)
 
         self.color_explanation_panel = wx.Panel(
             self, size=(outputPanelSize, 10))
@@ -380,8 +390,7 @@ class MainFrame(wx.Frame):
             output_act_func_dropdown, 0,
             wx.EXPAND | wx.RIGHT | wx.LEFT | wx.BOTTOM, self.border)
         rightBottomSizer.Add(self.output_panel, self.sizerFlags1)
-        rightBottomSizer.Add(
-            self.bias_panels[-1], 0, wx.LEFT | wx.BOTTOM, self.border)
+        rightBottomSizer.Add(outputBiasPanelSizer)
         rightBottomSizer.Add(
             self.color_explanation_panel, 0,
             wx.LEFT | wx.TOP, self.border)
@@ -412,7 +421,8 @@ class MainFrame(wx.Frame):
         MainFrame.display_datas["train"].append([mouse_x, mouse_y, color])
 
         y_train = color
-        # y_train = [1, 0] if(color == 1) else [0, 1]  # (output range: [0 -> 1, 0 -> 1])
+        if(MODE == 2):
+            y_train = [1, 0] if(color == 1) else [0, 1]  # (output range: [0 -> 1, 0 -> 1])
         model.MainModel.datasets["train"].append([[x, y], y_train])
 
         self.app.model.updateDatasets()
@@ -467,8 +477,10 @@ class MainFrame(wx.Frame):
         for j in range(len(model.MainModel.model_stru["hiddens"]) + 1):
             bias_list = weights[index]
             for bias in bias_list:
-                # map_bias = max(-1, min(1, bias))  # (output range: -1 -> 1)
-                map_bias = numpy.interp(bias, [-1, 1], [0, 1])  # (output range: 0 -> 1)
+                if(MODE == 0):
+                    map_bias = max(-1, min(1, bias))  # (output range: -1 -> 1)
+                if(MODE == 1 or MODE == 2):
+                    map_bias = numpy.interp(bias, [-1, 1], [0, 1])  # (output range: 0 -> 1 and [0 -> 1, 0 -> 1])
                 self.bias_panels[i].SetBackgroundColour(
                     self.app.mapOutputToRGBA(map_bias))
                 i += 1
@@ -605,13 +617,13 @@ class MainFrame(wx.Frame):
             self.frame_tooltip.SetPosition(event.GetPosition() + (10, 10))
 
     def biasPanelMouseEnterEvent(self, event):
-        panel_name = event.GetEventObject().GetName()
-        if(panel_name == "output"):
-            pos = [len(model.MainModel.model_stru["hiddens"]), 0]
+        split_name = event.GetEventObject().GetName().split(',')
+        if(split_name[0] == "output"):
+            pos = [int(split_name[1]), int(split_name[2])]
             textctrl = self.frame_tooltip_textctrl
             tooltip = self.frame_tooltip
         else:
-            pos = list(map(int, panel_name.split(',')))
+            pos = [int(split_name[0]), int(split_name[1])]
             textctrl = self.scrolled_panel_tooltip_textctrl
             tooltip = self.scrolled_panel_tooltip
 

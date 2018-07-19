@@ -6,6 +6,7 @@ import os
 import wx
 import numpy
 
+from main import MODE
 import frame
 import model
 import thread
@@ -100,22 +101,31 @@ class MainApp(wx.App):
     def mapOutputToRGBA(self, output):
 
         # (output range: -1 -> 1)
-        # index = int(MainApp.half_step + output * MainApp.half_step)
-        # if(MainApp.display_discretize):
-        #     index = 0 if output < 0 else MainApp.color_step
+        # if(MODE == 0):
+        #     index = int(MainApp.half_step + output * MainApp.half_step)
+        #     if(MainApp.display_discretize):
+        #         index = 0 if output < 0 else MainApp.color_step
 
-        # (output range: 0 -> 1)
-        index = max(
-            0, min(MainApp.color_step, int(output * MainApp.color_step)))
-        if(MainApp.display_discretize):
-            index = 0 if output < 0.5 else MainApp.color_step
-
+        skip = False
         # (output range: [0 -> 1, 0 -> 1])
-        # diff = abs(output[0]) - abs(output[1])
+        # if(isinstance(output, (list, numpy.ndarray))):
+        #     if(len(output) == 1):
+        #         output = output[0]
+        #     else:
+        #         diff = abs(output[0]) - abs(output[1])
         #
-        # index = int(MainApp.half_step + diff * MainApp.half_step)
-        # if(MainApp.display_discretize):
-        #     index = 0 if(diff < 0) else MainApp.color_step
+        #         index = int(MainApp.half_step + diff * MainApp.half_step)
+        #         if(MainApp.display_discretize):
+        #             index = 0 if(diff < 0) else MainApp.color_step
+        #
+        #         skip = True
+
+        # (output range: 0 -> 1 and [0 -> 1, 0 -> 1])
+        if((MODE == 1 or MODE == 2) and not skip):
+            index = max(
+                0, min(MainApp.color_step, int(output * MainApp.color_step)))
+            if(MainApp.display_discretize):
+                index = 0 if output < 0.5 else MainApp.color_step
 
         color = MainApp.output_color_step[index]
         return color
